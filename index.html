@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dynamic Webpage Example</title>
+  <style>
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    form div {
+      flex-basis: calc(100% - 10px);
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    button {
+      margin-top: 20px;
+    }
+    #developedby {
+               font-style: italic;
+               color: brown;
+          }
+          .link-container {
+               position: fixed;
+               top: 0%;
+               left: 0;
+               right: 0;
+               text-align: bottom;
+          }
+          /* Style for the links */
+          .link-container a {
+               color: rgba(255, 38, 0, 0.971);
+               text-decoration: none;
+               display: inline-block;
+               margin-right: 20px;
+               font-size: larger;
+          }
+  </style>
+</head>
+<body>
+  <a id="TOP"></a>
+  <form>
+    <label for="descriptionBox">Description  </label>
+    <textarea id="descriptionBox" placeholder="Enter your description here"></textarea><br>
+    <label for="h2-input">Phrase1</label>
+    <input type="text" id="h2-input"><br>
+    <label for="h3-input">Phrase2</label>
+    <input type="text" id="h3-input"><br>
+    <label for="h4-input">Other</label>
+    <input type="text" id="h4-input"><br>
+    <button type="button" id="submit-button">Submit</button>
+    <button type="button" id="copy-button">Copy to Clipboard</button>
+    <button type="button" id="undo-button" disabled>Undo</button>
+    <button type="button" id="redo-button" disabled>Redo</button>
+  </form>
+  <a href="" target="_blank"></a>
+  <br><br>
+  <div id="code">
+    <code> 
+      &#x3C;Other:&#x3E;&#x3C;table&#x3E;&#x3C;tr&#x3E;&#x3C;td&#x3E;phrase1&#x3C;/td&#x3E;&#x3C;td&#x3E;phrase2&#x3C;/td&#x3E;&#x3C;/tr&#x3E;&#x3C;/table&#x3E;&lt;br&gt; </code>
+  </div>
+  <script>
+    const h2Input = document.getElementById("h2-input");
+    const h3Input = document.getElementById("h3-input");
+    const h4Input = document.getElementById("h4-input");
+    const generateButton = document.getElementById("submit-button");
+    const copyButton = document.getElementById("copy-button");
+    const undoButton = document.getElementById("undo-button");
+    const redoButton = document.getElementById("redo-button");
+    const codeElement = document.getElementById("code");
+    let history = [{ code: codeElement.innerHTML,  h2:h2Input.value,  h3: h3Input.value, h4: h4Input.value}];
+    let current = 0;
+function updateInputs(code, h2, h3, h4) {
+  codeElement.innerHTML = code;
+  h2Input.value = h2;
+  h3Input.value = h3;
+  h4Input.value = h4;
+}
+function updateHistory(newCode, newH2,  newH3, newH4) {
+  history = history.slice(0, current + 1);
+  history.push({ code: newCode, h2:newH2, h3: newH3, h4: newH4});
+  current = history.length - 1;
+  undoButton.disabled = false;
+  redoButton.disabled = true;
+}
+generateButton.addEventListener("click", () => {
+  const newCode = `<code>  &#x3C;table&#x3E;&#x3C;tr&#x3E;&#x3C;td&#x3E;${h2Input.value}&rarr;&#x3C;/td&#x3E;&#x3C;td&#x3E;${h3Input.value}&#x3C;/td&#x3E;&#x3C;/tr&#x3E;&#x3C;/table&#x3E;&#x3C;p&#x3E;${h4Input.value}&#x3C;/p&#x3E; </code>`; 
+  copyButton.addEventListener("click", () => {
+        const codeElement = document.getElementById("code");
+        const codeText = codeElement.textContent.trim();
+        navigator.clipboard.writeText(codeText)
+          .then(() => {
+            alert("Code copied to clipboard!");
+          })
+          .catch(() => {
+            alert("Failed to copy code to clipboard.");
+          });
+        });
+  const newH2 = h2Input.value;
+  const newH3 = h3Input.value;
+  const newH4 = h4Input.value;
+  updateHistory(newCode,  newH2, newH3, newH4);
+  updateInputs(newCode,  newH2, newH3, newH4);
+});
+undoButton.addEventListener("click", () => {
+  if (current > 0) {
+    current--;
+    const prevState = history[current];
+    updateInputs(prevState.code,  prevState.h2, prevState.h3, prevState.h4);
+    undoButton.disabled = current === 0;
+    redoButton.disabled = false;
+  }
+});
+redoButton.addEventListener("click", () => {
+  if (current < history.length - 1) {
+    current++;
+    const nextState = history[current];
+    updateInputs(nextState.code,  nextState.h2, nextState.h3, nextState.h4);
+    undoButton.disabled = false;
+    redoButton.disabled = current === history.length - 1;
+  }
+});
+//Assigning Enter Key for Submission and shift Enter for new line//
+const form = document.querySelector('form');
+form.addEventListener('keydown', function(event) {
+  if (event.keyCode === 13 && !event.shiftKey) { // check if Enter key is pressed without Shift key
+    event.preventDefault(); // prevent the default Enter key behavior
+    document.getElementById('submit-button').click(); // trigger the submit button click event
+  }
+  else if (event.keyCode === 13 && event.shiftKey) { // check if Enter key is pressed with Shift key
+    // do nothing as Shift+Enter acts as default Enter key
+  }
+});
+//Autofill//
+descriptionBox.addEventListener("change", () => {
+  const lines = descriptionBox.value.split("\n");
+  if (lines.length >= 3) {
+    h2Input.value = lines[0].trim();
+    h3Input.value = lines[1].trim();
+    h4Input.value = lines[2].trim();
+  }
+});
+  </script>
+  <section id="parkingsection">
+    <br><table><tr><td>फड्को→</td><td>छलाङ</td></tr></table>    </section>
+  <section id="abbrsection">
+  </section>
+  <section>
+    <p id="developedby"><u><b>Developed By:</b></u><br> Debaka Timilsina (M.A, M.Ed; LL.B) <br> Shiva Prasad
+      Acharya
+      (M.Sc.; LL.M)<br> मेषसङ्क्रान्ति, २०८० <a id="BOTTOM"></a></p>
+ <div class="link-container">
+      <a href="#TOP">&#x25B2</a>
+      <a href="#BOTTOM">&#x25BC</a>
+ </div>
+  </section>
+  </body>
+  </html>
+<!-- This is for words and phrase collection -->
